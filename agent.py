@@ -3,16 +3,16 @@ import tkinter as tk
 from tkinter import messagebox
 from scapy.all import *
 from scapy.layers.eap import EAP
-from radius_eap_mschapv2 import RADIUS
+# from radius_eap_mschapv2 import RADIUS
 
-""" |||||||||||| |||||| |||||| ||||||  |||||| """
-radius_host = '192.168.30.5'
-radius_secret = 'Zola123:'
-radius_nas_ip = '192.168.30.10'
-radius_nas_id = 'mynas'
-username = 'myuser'
-password = 'adel'
-""" |||||||||||| |||||| |||||| |||||| |||||| ||||||"""
+# """ |||||||||||| |||||| |||||| ||||||  |||||| """
+# radius_host = '192.168.30.5'
+# radius_secret = 'Zola123:'
+# radius_nas_ip = '192.168.30.10'
+# radius_nas_id = 'mynas'
+# username = 'myuser'
+# password = 'adel'
+# """ |||||||||||| |||||| |||||| |||||| |||||| ||||||"""
 
 
 
