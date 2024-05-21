@@ -2,8 +2,36 @@ import subprocess
 import tkinter as tk
 from tkinter import messagebox
 from scapy.all import *
-from scapy.layers.eap import EAP
-# from radius_eap_mschapv2 import RADIUS
+from scapy.layers.l2 import Ether
+from scapy.layers.eap import EAP, EAPOL
+
+# Send an EAPOL-Start packet
+def send_eapol_start(interface):
+    eapol_start = Ether(dst="01:80:C2:00:00:03") / EAPOL(type=1)
+    sendp(eapol_start, iface=interface, verbose=1)
+
+# Handle the received EAP-Request and send an EAP-Response
+def handle_eap_request(packet, interface, client_mac):
+    if packet.haslayer(EAP):
+        eap_layer = packet[EAP]
+        if eap_layer.code == 1:  # EAP-Request
+            print(f"Received EAP-Request: ID={eap_layer.id}, Type={eap_layer.type}")
+            
+            # Construct EAP-Response
+            eap_response = Ether(dst=packet[Ether].src, src=client_mac) / \
+                           EAPOL(version=1, type=0) / \
+                           EAP(code=2, id=eap_layer.id, type=eap_layer.type, identity="client_identity")
+
+            sendp(eap_response, iface=interface, verbose=1)
+            print(f"Sent EAP-Response: ID={eap_layer.id}, Type={eap_layer.type}")
+
+# Sniff for EAP packets and handle them
+def sniff_eap_packets(interface, client_mac):
+    def eap_packet_callback(packet):
+        if packet.haslayer(EAP):
+            handle_eap_request(packet, interface, client_mac)
+    
+    sniff(iface=interface, prn=eap_packet_callback, filter="ether proto 0x888e", stop_filter=lambda x: x.haslayer(EAP) and x[EAP].code == 1)
 
 # """ |||||||||||| |||||| |||||| ||||||  |||||| """
 # radius_host = '192.168.30.5'
@@ -106,7 +134,7 @@ def run_virus_scan():
 
 # Function to send packet to the switch using scapy
 def login_8021x():
-         
+    send_eapol_start("eth1")  
     # r = RADIUS(radius_host, radius_secret, radius_nas_ip, radius_nas_id)
     # print(r.is_credential_valid(username, password))
 # Create GUI
