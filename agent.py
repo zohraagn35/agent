@@ -2,13 +2,20 @@ import subprocess
 import tkinter as tk
 from tkinter import messagebox
 from scapy.all import *
-from scapy.layers.l2 import Ether
-from scapy.layers.eap import EAP, EAPOL
+from scapy.layers.eap import EAP, EAPOL , EAP_PEAP
+  
+def send_eap_request(interface, dst_mac="01:80:C2:00:00:03", src_mac="f8:e4:e3:7b:1c:31"):
+    eap_packet = EAP_PEAP()
+    eap_packet.code = 1  # Request
+    eap_packet.identifier = 1
 
-# Send an EAPOL-Start packet
-def send_eapol_start(interface):
-    eapol_start = Ether(dst="01:80:C2:00:00:03") / EAPOL(type=1)
-    sendp(eapol_start, iface=interface, verbose=1)
+    eapol = EAPOL(packet=eap_packet)
+    ether = Ether(src=src_mac, dst=dst_mac) / eapol
+
+    # Send EAPOL frame using Scapy
+    sendp(ether, iface=interface)
+
+
 
 # Handle the received EAP-Request and send an EAP-Response
 def handle_eap_request(packet, interface, client_mac):
@@ -134,7 +141,7 @@ def run_virus_scan():
 
 # Function to send packet to the switch using scapy
 def login_8021x():
-    send_eapol_start("eth1")  
+    send_eap_request("Wi-Fi")
     # r = RADIUS(radius_host, radius_secret, radius_nas_ip, radius_nas_id)
     # print(r.is_credential_valid(username, password))
 # Create GUI

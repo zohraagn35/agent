@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<WLANProfile xmlns="http://www.microsoft.com/networking/wifimanagement/wlana pi-config/v1">
+  <name>My_Wired_EAP_Profile</name>  <connectionType>Ethernet</connectionType>
+  <interfaceName>Wi-Fi</interfaceName>  <SSIDConfig>
+    <SSID>
+      <name>802.1</name>  </SSID>
+  </SSIDConfig>
+  <security>
+    <authMode>WPA-EAP</authMode>
+    <eapConfig>
+      <eapMethod>PEAP</eapMethod>
+      <phase2>
+        <authMode>MSCHAPV2</authMode>
+      </phase2>
+    </eapConfig>
+    <protectedUnicastSetup>true</protectedUnicastSetup>
+  </security>
+  <parameters>
+    <hiddenNetwork>false</hiddenNetwork>
+    <startMode>Auto</startMode>
+  </parameters>
+  <userCredential>
+    <securityCredential type="username">
+      <username>adel</username>  </securityCredential>
+    </userCredential>
+</WLANProfile>
