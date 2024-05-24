@@ -10,7 +10,7 @@ def create_gui():
     root.geometry("700x700")
     root.resizable(False, False)
     
-    bg_image = tk.PhotoImage(file="agent.png")
+    bg_image = tk.PhotoImage(file="agent2.png")
     background_label = tk.Label(root, image=bg_image)
     background_label.place(relwidth=1, relheight=1)
 
