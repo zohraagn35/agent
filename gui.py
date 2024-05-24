@@ -1,69 +1,8 @@
-import subprocess
 import tkinter as tk
-from tkinter import ttk, messagebox
-import time
-import platform
-import re
+from tkinter import messagebox
 import math
-
-# Function to check if firewall is active on Windows
-def is_firewall_active():
-    if platform.system() == "Windows":
-        def get_firewall_status():
-            output = subprocess.run(["powershell", "-Command", "Get-NetFirewallProfile"], capture_output=True, text=True, shell=True).stdout
-            pattern = re.compile(r'Name\s+:\s+(\w+)\s+Enabled\s+:\s+(\w+)', re.MULTILINE)
-            matches = pattern.findall(output)
-            firewall_status = {match[0]: match[1].lower() == 'true' for match in matches}
-            return firewall_status
-        firewall_status = get_firewall_status()
-        return all(firewall_status.values())
-    else:
-        return True  # Assume non-Windows systems are always okay
-
-# Function to check if OS is up to date (dummy implementation)
-def is_os_up_to_date():
-    if platform.system() == "Windows":
-        try:
-            hotfix_output = subprocess.run(["powershell", "-Command", "Get-HotFix"], capture_output=True, text=True, shell=True).stdout
-            if "No updates are installed" in hotfix_output:
-                return True
-            security_updates_installed = any("Security Update" in line for line in hotfix_output.splitlines())
-            updates_installed = any("Update" in line for line in hotfix_output.splitlines())
-            return security_updates_installed and updates_installed
-        except Exception as e:
-            print(f"Error occurred while checking OS update status: {e}")
-            return False
-    else:
-        return False  # Assume non-Windows systems are always okay
-
-# Function to run a virus scan (dummy implementation)
-def run_virus_scan():
-    if platform.system() == "Windows":
-        try:
-            subprocess.run(["powershell", "-Command", "Start-MpScan -ScanType QuickScan"], check=True)
-            return True
-        except subprocess.CalledProcessError:
-            print("Failed to run virus scan.")
-            return False
-    else:
-        return False  # Assume non-Windows systems are always okay
-
-# Function to check if the user's Windows machine is in the domain "sonatrach.com"
-def check_domain():
-    if platform.system() == "Windows":
-        try:
-            domain_output = subprocess.run(["powershell", "-Command", "Get-WmiObject -Class Win32_ComputerSystem"], capture_output=True, text=True, shell=True).stdout
-            if "sonatrach.com" in domain_output:
-                return True
-            else:
-                return False
-        except Exception as e:
-            print(f"Error occurred while checking domain status: {e}")
-            return False
-    else:
-        return False  # Assume non-Windows systems are always okay
-
-# GUI functions
+import time
+from tasks import *
 def create_gui():
     global root, status_var, bg_image
     root = tk.Tk()
@@ -84,18 +23,19 @@ def create_gui():
 
     task_labels = ["Checking Firewall", "Checking Updates", "Running Virus Scan", "Checking Domain"]
     task_functions = [check_firewall_task, check_updates_task, run_scan_task, check_domain_task]
+    task_statuses = []
 
-    
-    for i, (label_text, task) in enumerate(zip(task_labels, task_functions)): 
-            label = tk.Label(root, text=label_text, bg="white", fg="black")
-            label.pack(pady=10)
-            canvas = tk.Canvas(root, width=50, height=50, bg="white", highlightthickness=0)
-            canvas.pack(pady=10)
-            animate_circle(canvas)
-            success = task(canvas, label)  # Check if the task succeeded
-           
-                
-                
+    for i, (label_text, task) in enumerate(zip(task_labels, task_functions)):
+        label = tk.Label(root, text=label_text, bg="white", fg="black")
+        label.pack(pady=10)
+        canvas = tk.Canvas(root, width=50, height=50, bg="white", highlightthickness=0)
+        canvas.pack(pady=10)
+        animate_circle(canvas)
+        success = task(canvas, label)
+        task_statuses.append(success)
+
+    if all(task_statuses):
+        reset_8021x_adapter()
 
     root.mainloop()
 
@@ -119,14 +59,14 @@ def check_firewall_task(canvas, label):
         canvas.delete("all")
         canvas.create_oval(10, 10, 40, 40, fill="green", outline="green")
         label.config(text=label.cget("text") + " - Completed")
+        return True
     else:
         update_status("Firewall is not active.")
         messagebox.showwarning("Task Stopped", "Firewall is not active. Please enable the firewall.")
         canvas.delete("all")
         canvas.create_oval(10, 10, 40, 40, fill="red", outline="red")
         label.config(text=label.cget("text") + " - not Completed")
-    
-
+        return False
 
 def check_updates_task(canvas, label):
     if is_os_up_to_date():
@@ -134,14 +74,14 @@ def check_updates_task(canvas, label):
         canvas.delete("all")
         canvas.create_oval(10, 10, 40, 40, fill="green", outline="green")
         label.config(text=label.cget("text") + " - Completed")
-
+        return True
     else:
         update_status("OS update required.")
         messagebox.showwarning("Task Stopped", "OS update is required. Please update your OS.")
         canvas.delete("all")
         canvas.create_oval(10, 10, 40, 40, fill="red", outline="red")
         label.config(text=label.cget("text") + " - not Completed")
-
+        return False
 
 def run_scan_task(canvas, label):
     if run_virus_scan():
@@ -149,12 +89,14 @@ def run_scan_task(canvas, label):
         canvas.delete("all")
         canvas.create_oval(10, 10, 40, 40, fill="green", outline="green")
         label.config(text=label.cget("text") + " - Completed")
+        return True
     else:
         update_status("Failed to complete virus scan.")
         messagebox.showwarning("Task Stopped", "Virus scan failed. Please check your antivirus software.")
         canvas.delete("all")
         canvas.create_oval(10, 10, 40, 40, fill="red", outline="red")
         label.config(text=label.cget("text") + " - not Completed")
+        return False
 
 def check_domain_task(canvas, label):
     if check_domain():
@@ -162,12 +104,11 @@ def check_domain_task(canvas, label):
         canvas.delete("all")
         canvas.create_oval(10, 10, 40, 40, fill="green", outline="green")
         label.config(text=label.cget("text") + " - Completed")
+        return True
     else:
         update_status("Machine is not in the 'sonatrach.com' domain.")
         messagebox.showwarning("Task Stopped", "Machine is not in the 'sonatrach.com' domain. Please log in to the 'sonatrach.com' domain to access the network.")
         canvas.delete("all")
         canvas.create_oval(10, 10, 40, 40, fill="red", outline="red")
         label.config(text=label.cget("text") + " - not Completed")
-
-if __name__ == "__main__":
-    create_gui()
+        return False
